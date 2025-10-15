@@ -1,0 +1,27 @@
+services:
+  postgres-db:
+    image: postgres:latest
+    container_name: meu-postgres-locadora
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Ko947
+      - POSTGRES_DB=locadora-db
+    volumes:
+      - postgres-data-local:/var/lib/postgresql/data
+
+  api-spring:
+    container_name: Locadora-API
+    build: .
+    ports:
+      - "8080:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/locadora-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=Ko947
+    depends_on:
+      - postgres-db
+
+volumes:
+  postgres-data-local:
