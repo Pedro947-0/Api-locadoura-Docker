@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Página Inicial - Locadora de Veículos</title>
+    <style>
+        body {
+            background: #23272b;
+            color: #f8f9fa;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 80px auto;
+            background: #343a40;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            padding: 32px 24px;
+            text-align: center;
+        }
+        h1 {
+            color: #00bcd4;
+            margin-bottom: 16px;
+        }
+        p {
+            color: #adb5bd;
+            margin-bottom: 32px;
+        }
+        .btn {
+            background: #00bcd4;
+            color: #23272b;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #0097a7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bem-vindo à Locadora de Veículos</h1>
+        <p>Gerencie veículos, usuários e locações de forma simples e eficiente.<br>Esta é uma página inicial de exemplo.</p>
+        <a href="/swagger-ui/index.html" class="btn">Acessar API (Swagger)</a>
+    </div>
+</body>
+</html>
