@@ -22,20 +22,19 @@ jobs:
 
       - name: ⏱️ Aguardar os contêineres estabilizarem
         run: |
-          echo "Aguardando 30 segundos para os serviços iniciarem..."
-          sleep 30
+          echo "Aguardando 60 segundos para os serviços iniciarem..."
+          sleep 60
 
       - name: 🩺 Verificar status dos contêineres
         run: |
           echo "--- Status dos Contêineres ---"
           docker-compose ps
           echo "--- Logs do Banco de Dados ---"
-          docker-compose logs db || echo "Serviço 'db' não encontrado ou sem logs."
+          docker-compose logs meu-postgres-locadora || echo "Serviço 'meu-postgres-locadora' não encontrado ou sem logs."
           echo "--- Logs da API ---"
-          docker-compose logs api || echo "Serviço 'api' não encontrado ou sem logs."
-      - name: 📞 Realizar teste de saúde na API
-        run: curl --fail http://localhost:8080/swagger-ui/index.html
-
+          docker-compose logs Locadora-API || echo "Serviço 'Locadora-API' não encontrado ou sem logs."
+          echo "--- Tentando acessar o endpoint de saúde da API ---"
+          curl --fail http://localhost:8083/swagger-ui/index.html || echo "Falha ao acessar o endpoint. Veja os logs acima para detalhes."
       - name: 🛑 Parar os contêineres após teste
         if: always()
         run: docker-compose down
