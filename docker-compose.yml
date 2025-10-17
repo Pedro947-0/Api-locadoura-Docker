@@ -1,6 +1,6 @@
 services:
   postgres-db:
-    image: postgres:latest
+    image: postgres:15
     container_name: meu-postgres-locadora
     ports:
       - "5432:5432"
@@ -10,6 +10,11 @@ services:
       - POSTGRES_DB=locadora-db
     volumes:
       - postgres-data-local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d locadora-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   api-spring:
     container_name: Locadora-API
