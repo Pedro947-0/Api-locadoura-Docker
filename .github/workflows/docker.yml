@@ -7,121 +7,65 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    env:
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
-      - name: Checkout
+      - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Install docker compose
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Preparar .env com secrets para o docker-compose
         run: |
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
 
-      - name: Create .env from secrets
-        run: |
-          echo "Creating .env from secrets..."
-
-          # Entrada de secrets (podem vir do env do job)
-          DB_PASSWORD=${DB_PASSWORD:-}
-          JWT_SECRET=${JWT_SECRET:-}
-
-          # Defaults seguros para CI local se secrets não estiverem definidos
-          if [ -z "$DB_PASSWORD" ]; then
-            echo "WARNING: DB_PASSWORD not set — using default 'postgres' for CI (set secret in repo)."
-            DB_PASSWORD=postgres
-          fi
-          if [ -z "$JWT_SECRET" ]; then
-            echo "WARNING: JWT_SECRET not set — generating temporary value."
-            JWT_SECRET=$(openssl rand -hex 12 || echo "dev-secret")
-          fi
-
-          # Valores do Postgres (compatíveis com docker-compose.yml existente)
-          POSTGRES_USER=${POSTGRES_USER:-postgres}
-          POSTGRES_DB=${POSTGRES_DB:-locadora-db}
-
-          # Mapear senhas: POSTGRES_PASSWORD e SPRING_DATASOURCE_PASSWORD caem back para DB_PASSWORD
-          POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-$DB_PASSWORD}
-          SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-$DB_PASSWORD}
-
-          # Criar .env com todas as variáveis necessárias para o docker-compose
-          printf '%s\n' \
-            "POSTGRES_USER=${POSTGRES_USER}" \
-            "POSTGRES_DB=${POSTGRES_DB}" \
-            "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}" \
-            "DB_PASSWORD=${DB_PASSWORD}" \
-            "SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}" \
-            "JWT_SECRET=${JWT_SECRET}" > .env
-
-          echo ".env created (content not shown for security)"
-
-      - name: Start docker-compose
-        run: docker-compose up -d --build
-
-      - name: Wait for Postgres
-        run: |
-          echo "Waiting for Postgres to accept connections..."
-          max_attempts=60
-          attempt=1
-          while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt/$max_attempts"
-
-            if docker-compose exec -T postgres-db pg_isready -U ${POSTGRES_USER:-postgres} >/dev/null 2>&1; then
-              echo "Postgres ready (pg_isready)"
-              exit 0
-            fi
-
-            container_id=$(docker-compose ps -q postgres-db 2>/dev/null || true)
-            if [ -n "$container_id" ]; then
-              health_status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_id" 2>/dev/null || true)
-              if [ "$health_status" = "healthy" ]; then
-                echo "Postgres container health=healthy"
-                exit 0
-              fi
-            fi
-
-            if bash -c "</dev/tcp/localhost/5432" >/dev/null 2>&1; then
-              echo "Postgres listening on localhost:5432"
-              exit 0
-            fi
-
-            attempt=$((attempt+1))
-            sleep 1
-          done
-
-          echo "Postgres did not become ready in time; printing logs"
-          docker-compose logs --no-color --tail=200 postgres-db || true
-          exit 1
-
-      - name: Check containers
-        run: |
-          docker-compose ps
-          docker-compose logs postgres-db || true
-          docker-compose logs api-spring || true
-
-      - name: Test swagger
-        run: |
-          if curl --fail --silent --show-error --max-time 10 http://localhost:8080/swagger-ui/index.html >/dev/null 2>&1; then
-            echo "Swagger responded"
-          else
-            echo "Swagger did not respond; printing API logs"
-            docker-compose logs --no-color --tail=300 api-spring || true
-            exit 1
-          fi
-
-      - name: Teardown
-        if: always()
-        run: docker-compose down
-
-      - name: Login to Docker Hub
+      - name: ✅ Login no Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: 🐋 Subir ambiente com Docker Compose (build)
+        run: |
+          docker-compose up -d --build
+
+      - name: ⏱️ Aguardar Postgres ficar pronto (pg_isready)
+        run: |
+          echo "Aguardando o Postgres..."
+          retries=0
+          until docker-compose exec -T postgres-db pg_isready -U postgres -d locadora-db >/dev/null 2>&1 || [ $retries -ge 60 ]; do
+            sleep 2
+            retries=$((retries+1))
+            echo "Tentativa $retries..."
+          done
+          if [ $retries -ge 60 ]; then
+            echo "Postgres não ficou pronto em tempo." >&2
+            echo "--- Últimos logs do DB ---"
+            docker-compose logs postgres-db --tail=200 || true
+            exit 1
+          fi
+
+      - name: 🩺 Verificar status dos contêineres e logs
+        run: |
+          echo "--- Status dos Contêineres ---"
+          docker-compose ps
+          echo "--- Logs do Banco de Dados (últimas 200 linhas) ---"
+          docker-compose logs postgres-db --tail=200 || true
+          echo "--- Logs da API (últimas 200 linhas) ---"
+          docker-compose logs api-spring --tail=200 || true
+
+      - name: 📞 Realizar teste de saúde na API
+        run: |
+          # Altere o endpoint se sua aplicação expor outro (por exemplo /actuator/health)
+          curl --fail http://localhost:8080/actuator/health
+
+      - name: 🛑 Parar os contêineres após teste
+        if: always()
+        run: |
+          docker-compose down -v
+
+      - name: 🚀 Build e Push da imagem para o Docker Hub
         uses: docker/build-push-action@v4
         with:
           context: .

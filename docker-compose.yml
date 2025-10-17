@@ -7,11 +7,11 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=locadora-db
+      - POSTGRES_DB=locadora_db
     volumes:
       - postgres-data-local:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d locadora-db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d locadora_db"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -22,7 +22,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/locadora-db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/locadora_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
