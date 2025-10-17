@@ -7,6 +7,9 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout do código
@@ -20,10 +23,32 @@ jobs:
       - name: 🐋 Subir ambiente com Docker Compose
         run: docker-compose up -d --build
 
-      - name: ⏱️ Aguardar os contêineres estabilizarem
+      - name: ⏱️ Aguardar Postgres ficar pronto (pg_isready / fallback TCP)
         run: |
-          echo "Aguardando 30 segundos para os serviços iniciarem..."
-          sleep 30
+          echo "Aguardando Postgres aceitar conexões..."
+          set -e
+
+          # Primeiro, tenta usar pg_isready dentro do container (se o utilitário estiver disponível no contêiner postgres)
+          for i in $(seq 1 60); do
+            if docker-compose exec -T postgres-db pg_isready -U ${POSTGRES_USER:-postgres} >/dev/null 2>&1; then
+              echo "Postgres respondeu via pg_isready"
+              exit 0
+            fi
+            # Se docker-compose exec falhar porque o comando não existe, faz fallback para checagem TCP
+            if [ $i -eq 1 ]; then
+              echo "pg_isready não disponível ou falhou — futuramente usarei checagem TCP como fallback"
+            fi
+            # Checagem TCP local (útil quando porta está mapeada para o host)
+            if bash -c "</dev/tcp/localhost/5432" >/dev/null 2>&1; then
+              echo "Postgres aceitando conexões na porta 5432 (host)"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Timeout aguardando Postgres — exibindo logs para diagnóstico"
+          docker-compose logs --no-color --tail=200 postgres-db || true
+          exit 1
 
       - name: 🩺 Verificar status dos contêineres
         run: |
