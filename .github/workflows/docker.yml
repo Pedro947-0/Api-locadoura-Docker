@@ -20,29 +20,69 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
+      - name: 🗝️ Criar arquivo .env com secrets para o docker-compose
+        run: |
+          echo "Criando .env a partir de secrets..."
+
+          # Se secrets não estiverem definidos, provisiona defaults (evita falha por POSTGRES_PASSWORD vazio)
+          if [ -z "${DB_PASSWORD}" ]; then
+            echo "WARNING: secret DB_PASSWORD não definido — usando valor default inseguro para permitir execução (defina secrets no repo)."
+            DB_PASSWORD=postgres
+          fi
+          if [ -z "${JWT_SECRET}" ]; then
+            echo "WARNING: secret JWT_SECRET não definido — gerando um valor temporário. (defina secrets no repo para produção)."
+            # gera um segredo curto; não exibimos no log
+            JWT_SECRET=$(openssl rand -hex 12 || echo "dev-secret")
+          fi
+
+          # Cria o arquivo .env (não será comitado)
+          cat > .env <<EOF
+
+         DB_PASSWORD=${DB_PASSWORD}
+         JWT_SECRET=${JWT_SECRET}
+         EOF
+          echo ".env criado com sucesso (conteúdo não exibido por segurança)"
+
       - name: 🐋 Subir ambiente com Docker Compose
         run: docker-compose up -d --build
 
-      - name: ⏱️ Aguardar Postgres ficar pronto (pg_isready / fallback TCP)
+      - name: ⏱️ Aguardar Postgres ficar pronto (pg_isready / health / fallback TCP)
         run: |
           echo "Aguardando Postgres aceitar conexões..."
-          set -e
+          set -u
 
-          # Primeiro, tenta usar pg_isready dentro do container (se o utilitário estiver disponível no contêiner postgres)
-          for i in $(seq 1 60); do
+          max_attempts=60
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            echo "Tentativa $attempt/$max_attempts..."
+
+            # 1) tenta pg_isready dentro do container (silencia erros)
             if docker-compose exec -T postgres-db pg_isready -U ${POSTGRES_USER:-postgres} >/dev/null 2>&1; then
               echo "Postgres respondeu via pg_isready"
               exit 0
             fi
-            # Se docker-compose exec falhar porque o comando não existe, faz fallback para checagem TCP
-            if [ $i -eq 1 ]; then
-              echo "pg_isready não disponível ou falhou — futuramente usarei checagem TCP como fallback"
+
+            # 2) se o container existir, checa health via docker inspect (requer healthcheck na compose)
+            container_id=$(docker-compose ps -q postgres-db 2>/dev/null || true)
+            if [ -n "$container_id" ]; then
+              health_status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container_id" 2>/dev/null || true)
+              if [ "$health_status" = "healthy" ]; then
+                echo "Container postgres-db está com health=healthy"
+                exit 0
+              else
+                echo "Container presente, health="$health_status""
+              fi
+            else
+              echo "Container postgres-db ainda não criado"
             fi
-            # Checagem TCP local (útil quando porta está mapeada para o host)
+
+            # 3) Fallback: checagem TCP na porta mapeada do host (útil em CI onde 5432 está exposto)
             if bash -c "</dev/tcp/localhost/5432" >/dev/null 2>&1; then
               echo "Postgres aceitando conexões na porta 5432 (host)"
               exit 0
             fi
+
+            attempt=$((attempt+1))
             sleep 1
           done
 
