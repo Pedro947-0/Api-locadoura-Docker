@@ -8,17 +8,21 @@ version: "1.0"
 profile:
   name: qodana.starter
 
-#Enable inspections
-#include:
-#  - name: <SomeEnabledInspectionId>
-
 #Disable inspections
 #exclude:
 #  - name: <SomeDisabledInspectionId>
 #    paths:
 #      - <path/where/not/run/inspection>
++
++# Excluir diretórios gerados e o repositório git para reduzir escopo do scan (evita OOM/tempo excessivo)
++exclude:
++  - name: generated-and-vcs
++    paths:
++      - target/**
++      - .git/**
++      - node_modules/**
 
-projectJDK: "24" #(Applied in CI/CD pipeline)
+projectJDK: "21" #(Applied in CI/CD pipeline) - alinhado ao Java 21 usado pelo projeto
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
 #bootstrap: sh ./prepare-qodana.sh

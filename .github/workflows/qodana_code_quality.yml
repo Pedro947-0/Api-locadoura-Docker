@@ -19,9 +19,15 @@ jobs:
       pull-requests: write
       checks: write
     steps:
+      - name: Diagnóstico rápido (Java, espaço em disco, tree)
+        run: |
+          java -version || true
+          df -h || true
+          du -sh . || true
+          ls -la || true
+
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2025.2
@@ -34,6 +40,14 @@ jobs:
           post-pr-comment: true
           use-annotations: true
           # Upload Qodana results (SARIF, other artifacts, logs) as an artifact to the job
-          upload-result: false
+          upload-result: true
+          # Memory limit for the Qodana container (in MB). A higher value helps avoid OOM.
+          memory: 6144
           # quick-fixes available in Ultimate and Ultimate Plus plans
           push-fixes: 'none'
+      - name: List Qodana results (if any)
+        run: |
+          echo "Listing potential results dirs"
+          ls -la .qodana || true
+          ls -la results || true
+          ls -la qodana-results || true
