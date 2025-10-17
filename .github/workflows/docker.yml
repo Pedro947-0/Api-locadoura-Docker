@@ -17,36 +17,86 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      - name: 🐋 Subir ambiente com Docker Compose
-        run: docker-compose up -d
-
-      - name: ⏱️ Aguardar os contêineres estabilizarem
+      - name: Preparar .env com secrets (opcional)
         run: |
-          echo "Aguardando 30 segundos para os serviços iniciarem..."
-          sleep 30
+          if [ -n "${{ secrets.DB_PASSWORD }}" ]; then
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+          fi
+          if [ -n "${{ secrets.JWT_SECRET }}" ]; then
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          fi
 
-      - name: 🩺 Verificar status dos contêineres
+      - name: 🐋 Subir ambiente com Docker Compose (build)
+        run: |
+          docker-compose up -d --build
+
+      - name: ⏱️ Aguardar Postgres ficar pronto (pg_isready)
+        run: |
+          echo "Aguardando o Postgres (postgres-db) ficar pronto..."
+          retries=0
+          until docker-compose exec -T postgres-db pg_isready -U postgres -d locadora_db >/dev/null 2>&1 || [ $retries -ge 60 ]; do
+            sleep 2
+            retries=$((retries+1))
+            echo "Tentativa $retries..."
+          done
+          if [ $retries -ge 60 ]; then
+            echo "Postgres não ficou pronto em tempo." >&2
+            echo "--- Últimos logs do DB ---"
+            docker-compose logs postgres-db --tail=200 || true
+            docker-compose ps || true
+            exit 1
+          fi
+
+      - name: 🩺 Verificar status dos contêineres e logs
         run: |
           echo "--- Status dos Contêineres ---"
           docker-compose ps
-          echo "--- Logs do Banco de Dados ---"
-          docker-compose logs db || echo "Serviço 'db' não encontrado ou sem logs."
-          echo "--- Logs da API ---"
-          docker-compose logs api || echo "Serviço 'api' não encontrado ou sem logs."
-      - name: 📞 Realizar teste de saúde na API
+          echo "--- Logs do Banco de Dados (últimas 200 linhas) ---"
+          docker-compose logs postgres-db --tail=200 || true
+          echo "--- Logs da API (últimas 200 linhas) ---"
+          docker-compose logs api-spring --tail=200 || true
+
+      - name: ⏱️ Aguardar API responder (actuator/health ou Swagger)
+        run: |
+          echo "Aguardando API (actuator/health) ..."
+          retries=0
+          until curl --silent --fail http://localhost:8080/actuator/health >/dev/null 2>&1 || [ $retries -ge 60 ]; do
+            sleep 2
+            retries=$((retries+1))
+            echo "Tentativa $retries..."
+          done
+          if [ $retries -ge 60 ]; then
+            echo "Actuator não respondeu em tempo, tentando Swagger..."
+            retries=0
+            until curl --silent --fail http://localhost:8080/swagger-ui/index.html >/dev/null 2>&1 || [ $retries -ge 30 ]; do
+              sleep 2
+              retries=$((retries+1))
+              echo "Swagger tentativa $retries..."
+            done
+            if [ $retries -ge 30 ]; then
+              echo "API não ficou pronta em tempo." >&2
+              docker-compose logs api-spring --tail=200 || true
+              docker-compose ps || true
+              exit 1
+            fi
+          fi
+
+      - name: 📞 Teste final (Swagger UI)
         run: curl --fail http://localhost:8080/swagger-ui/index.html
 
       - name: 🛑 Parar os contêineres após teste
         if: always()
-        run: docker-compose down
+        run: docker-compose down -v
 
       - name: ✅ Login no Docker Hub
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: 🚀 Build e Push da imagem para o Docker Hub
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD }}
         uses: docker/build-push-action@v4
         with:
           context: .
