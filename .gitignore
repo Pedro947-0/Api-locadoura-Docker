@@ -19,3 +19,5 @@ target/
 # OS files
 Thumbs.db
 
+# Env files
+.env
