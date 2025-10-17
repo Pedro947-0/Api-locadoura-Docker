@@ -10,6 +10,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 // listar, buscar, criar, alugar, devolver e remover veículos.
 
@@ -19,6 +22,8 @@ public class VeiculoController {
     @Autowired
     private VeiculoService veiculoService;
 
+    private static final Logger logger = LoggerFactory.getLogger(VeiculoController.class);
+
 
     @GetMapping
     @Operation(summary = "Listar todos os veículos")
@@ -27,7 +32,7 @@ public class VeiculoController {
         try {
             return veiculoService.listarTodos();
         } catch (Exception e) {
-            System.err.println("Erro ao listar veículos: " + e.getMessage());
+            logger.error("Erro ao listar veículos", e);
             return List.of();
         }
     }
@@ -42,7 +47,7 @@ public class VeiculoController {
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            System.err.println("Erro ao buscar veículo por id: " + e.getMessage());
+            logger.error("Erro ao buscar veículo por id: {}", id, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -56,8 +61,7 @@ public class VeiculoController {
             VeiculoResponse salvo = veiculoService.criarVeiculo(request);
             return ResponseEntity.ok(salvo);
         } catch (Exception e) {
-            System.err.println("Erro ao criar veículo: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Erro ao criar veículo", e);
             return ResponseEntity.badRequest().body(null);
         }
     }
@@ -71,7 +75,7 @@ public class VeiculoController {
             VeiculoResponse alugado = veiculoService.alugarVeiculo(id);
             return ResponseEntity.ok(alugado);
         } catch (Exception e) {
-            System.err.println("Erro ao alugar veículo: " + e.getMessage());
+            logger.error("Erro ao alugar veículo: {}", id, e);
             return ResponseEntity.badRequest().body(null);
         }
     }
@@ -85,7 +89,7 @@ public class VeiculoController {
             VeiculoResponse devolvido = veiculoService.devolverVeiculo(id);
             return ResponseEntity.ok(devolvido);
         } catch (Exception e) {
-            System.err.println("Erro ao devolver veículo: " + e.getMessage());
+            logger.error("Erro ao devolver veículo: {}", id, e);
             return ResponseEntity.badRequest().body(null);
         }
     }

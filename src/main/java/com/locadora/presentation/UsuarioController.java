@@ -13,11 +13,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
     @Autowired
     public UsuarioController(UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
         this.usuarioRepository = usuarioRepository;
@@ -30,7 +34,7 @@ public class UsuarioController {
         try {
             return usuarioRepository.findAll();
         } catch (Exception e) {
-            System.err.println("Erro ao listar usuários: " + e.getMessage());
+            logger.error("Erro ao listar usuários", e);
             throw new RuntimeException("Erro ao listar usuários");
         }
     }
@@ -61,21 +65,6 @@ public class UsuarioController {
         }
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletar(@PathVariable Long id) {
-        try {
-            if (!usuarioRepository.existsById(id)) {
-                return ResponseEntity.notFound().build();
-            }
-            usuarioRepository.deleteById(id);
-            return ResponseEntity.ok("Usuário removido com sucesso");
-        } catch (Exception e) {
-            System.err.println("Erro ao remover usuário: " + e.getMessage());
-            return ResponseEntity.internalServerError().body("Erro ao remover usuário");
-        }
-    }
-
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarTodosUsuarios() {
@@ -94,11 +83,17 @@ public class UsuarioController {
             ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarUsuario(@PathVariable Long id) {
-        return usuarioService.excluirUsuario(id) ?
-            ResponseEntity.noContent().build() :
-            ResponseEntity.notFound().build();
+        try {
+            return usuarioService.excluirUsuario(id) ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Erro ao remover usuário id={}", id, e);
+            return ResponseEntity.internalServerError().body("Erro ao remover usuário");
+        }
     }
 
     @PatchMapping("/{id}/bloquear")
