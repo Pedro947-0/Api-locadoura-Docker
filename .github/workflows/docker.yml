@@ -19,6 +19,13 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
+          echo "Verificando se os Secrets necessários estão definidos..."
+          if [ -z "$DB_PASSWORD" ] || [ -z "$JWT_SECRET" ]; then
+            echo "ERROR: Secrets DB_PASSWORD e/ou JWT_SECRET não estão definidos."
+            echo "Por favor, adicione os secrets no repositório: Settings → Secrets and variables → Actions."
+            echo "Exemplo (gh): gh secret set DB_PASSWORD -b \"my_db_password\" -R OWNER/REPO"
+            exit 1
+          fi
           echo "Criando .env com as variáveis necessárias (não exibindo valores)..."
           printf "DB_PASSWORD=%s\n" "$DB_PASSWORD" > .env
           printf "JWT_SECRET=%s\n" "$JWT_SECRET" >> .env
