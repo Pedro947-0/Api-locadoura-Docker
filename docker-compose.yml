@@ -15,13 +15,14 @@ services:
     container_name: Locadora-API
     build: .
     ports:
-      - "8080:8083"
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/locadora-db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=Ko947
     depends_on:
       - postgres-db
+    restart: on-failure
 
 volumes:
   postgres-data-local:
