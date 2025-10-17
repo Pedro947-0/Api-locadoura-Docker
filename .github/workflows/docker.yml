@@ -23,9 +23,12 @@ jobs:
       - name: Create .env from secrets
         run: |
           echo "Creating .env from secrets..."
+
+          # Entrada de secrets (podem vir do env do job)
           DB_PASSWORD=${DB_PASSWORD:-}
           JWT_SECRET=${JWT_SECRET:-}
 
+          # Defaults seguros para CI local se secrets não estiverem definidos
           if [ -z "$DB_PASSWORD" ]; then
             echo "WARNING: DB_PASSWORD not set — using default 'postgres' for CI (set secret in repo)."
             DB_PASSWORD=postgres
@@ -35,8 +38,23 @@ jobs:
             JWT_SECRET=$(openssl rand -hex 12 || echo "dev-secret")
           fi
 
-          # Cria .env sem usar here-doc para evitar problemas de indentação no YAML
-          printf '%s\n' "DB_PASSWORD=${DB_PASSWORD}" "JWT_SECRET=${JWT_SECRET}" > .env
+          # Valores do Postgres (compatíveis com docker-compose.yml existente)
+          POSTGRES_USER=${POSTGRES_USER:-postgres}
+          POSTGRES_DB=${POSTGRES_DB:-locadora-db}
+
+          # Mapear senhas: POSTGRES_PASSWORD e SPRING_DATASOURCE_PASSWORD caem back para DB_PASSWORD
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-$DB_PASSWORD}
+          SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-$DB_PASSWORD}
+
+          # Criar .env com todas as variáveis necessárias para o docker-compose
+          printf '%s\n' \
+            "POSTGRES_USER=${POSTGRES_USER}" \
+            "POSTGRES_DB=${POSTGRES_DB}" \
+            "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}" \
+            "DB_PASSWORD=${DB_PASSWORD}" \
+            "SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}" \
+            "JWT_SECRET=${JWT_SECRET}" > .env
+
           echo ".env created (content not shown for security)"
 
       - name: Start docker-compose
