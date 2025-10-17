@@ -35,10 +35,8 @@ jobs:
             JWT_SECRET=$(openssl rand -hex 12 || echo "dev-secret")
           fi
 
-          cat > .env <<EOF
-DB_PASSWORD=${DB_PASSWORD}
-JWT_SECRET=${JWT_SECRET}
-EOF
+          # Cria .env sem usar here-doc para evitar problemas de indentação no YAML
+          printf '%s\n' "DB_PASSWORD=${DB_PASSWORD}" "JWT_SECRET=${JWT_SECRET}" > .env
           echo ".env created (content not shown for security)"
 
       - name: Start docker-compose
