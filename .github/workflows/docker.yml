@@ -7,6 +7,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: 1
 
     steps:
       - name: Checkout do código
@@ -28,13 +30,26 @@ jobs:
       - name: 🩺 Verificar status dos contêineres
         run: |
           echo "--- Status dos Contêineres ---"
-          docker-compose ps
+          docker-compose ps || true
           echo "--- Logs do Banco de Dados ---"
           docker-compose logs db || echo "Serviço 'db' não encontrado ou sem logs."
           echo "--- Logs da API ---"
           docker-compose logs api || echo "Serviço 'api' não encontrado ou sem logs."
+
       - name: 📞 Realizar teste de saúde na API
-        run: curl --fail http://localhost:8080/swagger-ui/index.html
+        run: |
+          # Tenta várias vezes antes de falhar (mais resiliente a startups lentos)
+          for i in 1 2 3 4 5; do
+            if curl --fail http://localhost:8080/swagger-ui/index.html -sS; then
+              echo "API pronta"
+              exit 0
+            else
+              echo "Tentativa $i falhou, aguardando 10s..."
+              sleep 10
+            fi
+          done
+          echo "Teste de saúde falhou" >&2
+          exit 1
 
       - name: 🛑 Parar os contêineres após teste
         if: always()
@@ -46,9 +61,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: 🚀 Preparar buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: 🚀 Build e Push da imagem para o Docker Hub
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/jovemapi:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/locadora-veiculos:latest
