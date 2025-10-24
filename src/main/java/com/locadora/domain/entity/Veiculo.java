@@ -2,6 +2,8 @@ package com.locadora.domain.entity;
 
 import com.locadora.domain.enums.StatusVeiculo;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "veiculos")
@@ -17,6 +19,10 @@ public class Veiculo {
     @Enumerated(EnumType.STRING)
     private StatusVeiculo status;
 
+
+    @OneToMany(mappedBy = "veiculo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Locacao> locacoes = new ArrayList<>();
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getMarca() { return marca; }
@@ -30,6 +36,20 @@ public class Veiculo {
 
     public StatusVeiculo getStatus() { return status; }
     public void setStatus(StatusVeiculo status) { this.status = status; }
+
+    public List<Locacao> getLocacoes() { return locacoes; }
+
+    public void addLocacao(Locacao locacao) {
+        if (locacao == null) return;
+        locacoes.add(locacao);
+        locacao.setVeiculo(this);
+    }
+
+    public void removeLocacao(Locacao locacao) {
+        if (locacao == null) return;
+        locacoes.remove(locacao);
+        locacao.setVeiculo(null);
+    }
 
     public void atualizarVeiculoFromDTO(com.locadora.application.dto.request.VeiculoRequest dto) {
         if (dto.getMarca() != null) setMarca(dto.getMarca());

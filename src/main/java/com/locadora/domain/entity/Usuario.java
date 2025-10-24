@@ -2,8 +2,9 @@ package com.locadora.domain.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import jdk.jfr.DataAmount;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -33,8 +34,12 @@ public class Usuario {
     private String role = "USER";
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'ATIVO'")
     private com.locadora.domain.enums.StatusUsuario status = com.locadora.domain.enums.StatusUsuario.ATIVO;
+
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Locacao> locacoes = new ArrayList<>();
 
 
     public Long getId() { return id; }
@@ -56,6 +61,20 @@ public class Usuario {
     public void setRole(String role) { this.role = role; }
     public com.locadora.domain.enums.StatusUsuario getStatus() { return status; }
     public void setStatus(com.locadora.domain.enums.StatusUsuario status) { this.status = status; }
+
+    public List<Locacao> getLocacoes() { return locacoes; }
+
+    public void addLocacao(Locacao locacao) {
+        if (locacao == null) return;
+        locacoes.add(locacao);
+        locacao.setUsuario(this);
+    }
+
+    public void removeLocacao(Locacao locacao) {
+        if (locacao == null) return;
+        locacoes.remove(locacao);
+        locacao.setUsuario(null);
+    }
 
     public void atualizarUsuarioFromDTO(com.locadora.application.dto.request.UsuarioCriarRequestDto dto) {
         if (dto.getNome() != null) setNome(dto.getNome());

@@ -9,12 +9,12 @@ public class Locacao {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false, foreignKey = @ForeignKey(name = "fk_locacao_usuario"))
     private Usuario usuario;
 
-    @ManyToOne
-    @JoinColumn(name = "veiculo_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "veiculo_id", nullable = false, foreignKey = @ForeignKey(name = "fk_locacao_veiculo"))
     private Veiculo veiculo;
 
     private LocalDate dataInicio;

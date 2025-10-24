@@ -10,6 +10,7 @@ import com.locadora.domain.repository.UsuarioRepository;
 import com.locadora.domain.exception.validadores.CpfValidator;
 
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,16 @@ public class UsuarioService {
                 logger.warn("Tentativa de registro com email já existente: {}", request.getEmail());
                 throw new IllegalArgumentException("Email já cadastrado");
             }
+
+            String role = request.getRole() != null ? request.getRole().toUpperCase() : "USER";
+
             Usuario usuario = new Usuario();
             usuario.setNome(request.getNome());
             usuario.setEmail(request.getEmail());
             usuario.setSenha(passwordEncoder.encode(request.getSenha()));
             usuario.setCpf(request.getCpf());
-            usuario.setRole(request.getRole() != null ? request.getRole() : "USER");
+            usuario.setRole(role);
+
             Usuario salvo = usuarioRepository.save(usuario);
             logger.info("Usuário registrado com sucesso: {}", salvo.getEmail());
             return new UsuarioResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getCpf(), null);
