@@ -19,7 +19,7 @@ public class Locacao {
 
     private LocalDate dataInicio;
     private LocalDate dataFim;
-    private String status; // ativo encerado
+    private String status;
 
 
     public Long getId() { return id; }

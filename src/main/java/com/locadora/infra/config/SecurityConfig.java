@@ -1,3 +1,4 @@
+
 package com.locadora.infra.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,23 +15,47 @@ import org.springframework.http.HttpMethod;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+
+    private static final boolean DISABLE_SECURITY = false;
+    // private static final boolean DISABLE_SECURITY = true;
+
     @Autowired
+
+
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
-        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/usuarios/registrar", "/api/usuarios/login", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/veiculos/**").permitAll()
-                .anyRequest().authenticated()
-        );
+        if (DISABLE_SECURITY) {
 
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // R
+            http.csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
+        } else {
 
-        return http.build();
+            // J
+            http.csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/usuarios/registrar",
+                            "/api/usuarios/login",
+                            "/api/auth/login",
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**",
+                            "/swagger-ui.html").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/veiculos/**").permitAll()
+                    .anyRequest().authenticated()
+            );
+
+            http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+            return http.build();
+        }
     }
 }
