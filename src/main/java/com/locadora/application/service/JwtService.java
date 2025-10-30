@@ -15,7 +15,6 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
@@ -23,6 +22,9 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", usuario.getId());
         claims.put("email", usuario.getEmail());
+        if (usuario.getDefaultEmpresa() != null) {
+            claims.put("defaultEmpresaId", usuario.getDefaultEmpresa().getId());
+        }
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(usuario.getEmail())

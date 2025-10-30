@@ -18,6 +18,9 @@ public class UsuarioLoginRequest {
     @Size(min = 11, max = 11, message = "CPF deve ter 11 dígitos")
     private String cpf;
 
+    // novo campo opcional para especificar empresa durante o login
+    private Long defaultEmpresaId;
+
     public UsuarioLoginRequest() {}
 
     public UsuarioLoginRequest(String email, String senha, String cpf) {
@@ -32,4 +35,7 @@ public class UsuarioLoginRequest {
     public void setSenha(String senha) { this.senha = senha; }
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
+
+    public Long getDefaultEmpresaId() { return defaultEmpresaId; }
+    public void setDefaultEmpresaId(Long defaultEmpresaId) { this.defaultEmpresaId = defaultEmpresaId; }
 }

@@ -1,22 +1,30 @@
 package com.locadora.domain.entity;
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.locadora.domain.enums.StatusUsuario;
 
 @Entity
 @Table(name = "usuarios")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Usuario {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nome;
+
     @Column(unique = true)
     private String email;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String senha;
 
     @CreationTimestamp
@@ -35,12 +43,18 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(255) default 'ATIVO'")
-    private com.locadora.domain.enums.StatusUsuario status = com.locadora.domain.enums.StatusUsuario.ATIVO;
-
+    private StatusUsuario status = StatusUsuario.ATIVO;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Locacao> locacoes = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "default_empresa_id", nullable = true,
+            foreignKey = @ForeignKey(name = "fk_usuario_empresa"))
+    @JsonIgnoreProperties("usuarios")
+    private Empresa defaultEmpresa;
+
+    public Usuario() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,7 +63,7 @@ public class Usuario {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
+    public void setSenha(String senha) { this.senha = senha; } // codificar a senha no serviço antes de persistir
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -59,10 +73,15 @@ public class Usuario {
     public void setCpf(String cpf) { this.cpf = cpf; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-    public com.locadora.domain.enums.StatusUsuario getStatus() { return status; }
-    public void setStatus(com.locadora.domain.enums.StatusUsuario status) { this.status = status; }
+    public StatusUsuario getStatus() { return status; }
+    public void setStatus(StatusUsuario status) { this.status = status; }
 
     public List<Locacao> getLocacoes() { return locacoes; }
+
+    public Empresa getDefaultEmpresa() { return defaultEmpresa; }
+    public void setDefaultEmpresa(Empresa defaultEmpresa) {
+        this.defaultEmpresa = defaultEmpresa;
+    }
 
     public void addLocacao(Locacao locacao) {
         if (locacao == null) return;
@@ -81,6 +100,23 @@ public class Usuario {
         if (dto.getEmail() != null) setEmail(dto.getEmail());
         if (dto.getCpf() != null) setCpf(dto.getCpf());
         if (dto.getRole() != null) setRole(dto.getRole());
+        if (dto.getSenha() != null) {
 
+            setSenha(dto.getSenha());
+        }
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Usuario)) return false;
+        Usuario usuario = (Usuario) o;
+        return id != null && Objects.equals(id, usuario.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

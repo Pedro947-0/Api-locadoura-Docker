@@ -1,37 +1,31 @@
 package com.locadora.presentation;
 
 import com.locadora.domain.entity.Empresa;
-import com.locadora.service.EmpresaService;
+import com.locadora.domain.repository.EmpresaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/empresas")
 public class EmpresaController {
 
-    private final EmpresaService service;
+    private final EmpresaRepository empresaRepository;
 
-    public EmpresaController(EmpresaService service) {
-        this.service = service;
+    public EmpresaController(EmpresaRepository empresaRepository) {
+        this.empresaRepository = empresaRepository;
     }
 
     @PostMapping
     public ResponseEntity<Empresa> criar(@RequestBody Empresa empresa) {
-        Empresa salvo = service.criar(empresa);
-        return ResponseEntity.ok(salvo);
+        Empresa saved = empresaRepository.save(empresa);
+        return ResponseEntity.created(URI.create("/api/empresas/" + saved.getId())).body(saved);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Empresa> buscar(@PathVariable Long id) {
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Empresa> atualizar(@PathVariable Long id, @RequestBody Empresa empresa) {
-        Empresa atualizado = service.atualizar(id, empresa);
-        return ResponseEntity.ok(atualizado);
+    @GetMapping
+    public ResponseEntity<List<Empresa>> listar() {
+        List<Empresa> todas = empresaRepository.findAll();
+        return ResponseEntity.ok(todas);
     }
 }
-

@@ -26,6 +26,8 @@ public class UsuarioRequest {
 
     private String role = "USER";
 
+    // novo campo opcional para associar uma empresa por id durante o registro
+    private Long defaultEmpresaId;
 
     public UsuarioRequest() {}
 
@@ -53,6 +55,9 @@ public class UsuarioRequest {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
+    public Long getDefaultEmpresaId() { return defaultEmpresaId; }
+    public void setDefaultEmpresaId(Long defaultEmpresaId) { this.defaultEmpresaId = defaultEmpresaId; }
+
     @Override
     public String toString() {
         return "UsuarioRequest{" +
@@ -60,6 +65,7 @@ public class UsuarioRequest {
                 ", email='" + email + '\'' +
                 ", cpf='" + cpf + '\'' +
                 ", role='" + role + '\'' +
+                ", defaultEmpresaId='" + defaultEmpresaId + '\'' +
                 '}';
     }
 }

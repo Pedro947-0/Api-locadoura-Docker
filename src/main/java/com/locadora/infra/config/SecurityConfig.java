@@ -16,8 +16,8 @@ import org.springframework.http.HttpMethod;
 public class SecurityConfig {
 
 
-    private static final boolean DISABLE_SECURITY = false;
-    // private static final boolean DISABLE_SECURITY = true;
+   // private static final boolean DISABLE_SECURITY = false;
+     private static final boolean DISABLE_SECURITY = true;
 
     @Autowired
 

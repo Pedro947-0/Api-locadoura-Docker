@@ -8,18 +8,18 @@ public class UsuarioResponse {
     private String nome;
     private String email;
     private String cpf;
-    private String telefone;
+    private Long defaultEmpresaId;
 
 
     public UsuarioResponse() {}
 
 
-    public UsuarioResponse(Long id, String nome, String email, String cpf, String telefone) {
+    public UsuarioResponse(Long id, String nome, String email, String cpf, Long defaultEmpresaId) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.cpf = cpf;
-        this.telefone = telefone;
+        this.defaultEmpresaId = defaultEmpresaId;
     }
 
 
@@ -35,6 +35,6 @@ public class UsuarioResponse {
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
 
-    public String getTelefone() { return telefone; }
-    public void setTelefone(String telefone) { this.telefone = telefone; }
+    public Long getDefaultEmpresaId() { return defaultEmpresaId; }
+    public void setDefaultEmpresaId(Long defaultEmpresaId) { this.defaultEmpresaId = defaultEmpresaId; }
 }

@@ -7,6 +7,7 @@ import com.locadora.application.dto.request.UsuarioRequest;
 import com.locadora.application.dto.response.UsuarioResponse;
 import com.locadora.domain.entity.Usuario;
 import com.locadora.domain.repository.UsuarioRepository;
+import com.locadora.domain.repository.EmpresaRepository;
 import com.locadora.domain.exception.validadores.CpfValidator;
 
 
@@ -26,6 +27,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private EmpresaRepository empresaRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -49,9 +53,15 @@ public class UsuarioService {
             usuario.setCpf(request.getCpf());
             usuario.setRole(role);
 
+            // associar empresa padrão se informado
+            if (request.getDefaultEmpresaId() != null) {
+                empresaRepository.findById(request.getDefaultEmpresaId()).ifPresent(usuario::setDefaultEmpresa);
+            }
+
             Usuario salvo = usuarioRepository.save(usuario);
             logger.info("Usuário registrado com sucesso: {}", salvo.getEmail());
-            return new UsuarioResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getCpf(), null);
+            Long empresaId = salvo.getDefaultEmpresa() != null ? salvo.getDefaultEmpresa().getId() : null;
+            return new UsuarioResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getCpf(), empresaId);
         } catch (IllegalArgumentException e) {
             logger.error("Erro de validação ao registrar usuário: {}", e.getMessage());
             throw e;
@@ -87,8 +97,22 @@ public class UsuarioService {
                 boolean senhaValida = passwordEncoder.matches(request.getSenha(), usuario.getSenha());
                 if (!senhaValida) {
                     logger.warn("Senha inválida para o email: {}", request.getEmail());
+                    return false;
                 }
-                return senhaValida;
+
+                // se o cliente informou uma empresa no payload de login, verificar se o usuário pertence a ela
+                if (request.getDefaultEmpresaId() != null) {
+                    if (usuario.getDefaultEmpresa() == null) {
+                        logger.warn("Usuário não possui empresa padrão, mas login solicitou empresa id={}", request.getDefaultEmpresaId());
+                        return false; // negar login se empresa for exigida
+                    }
+                    if (!request.getDefaultEmpresaId().equals(usuario.getDefaultEmpresa().getId())) {
+                        logger.warn("Empresa do usuário ({}) não confere com valor enviado no login ({})", usuario.getDefaultEmpresa().getId(), request.getDefaultEmpresaId());
+                        return false;
+                    }
+                }
+
+                return true;
             } else {
                 logger.warn("Tentativa de login com email/cpf não encontrados: {} / {}", request.getEmail(), request.getCpf());
             }
@@ -100,7 +124,8 @@ public class UsuarioService {
     }
 
     public UsuarioResponse toResponse(Usuario usuario) {
-        return new UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getCpf(), null);
+        Long empresaId = usuario.getDefaultEmpresa() != null ? usuario.getDefaultEmpresa().getId() : null;
+        return new UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getCpf(), empresaId);
     }
 
     // Novo método para listar todos os usuários (para exibir no Swagger)
