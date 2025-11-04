@@ -29,7 +29,7 @@ public class UsuarioController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<Usuario> listar() {
         try {
             return usuarioRepository.findAll();
@@ -66,7 +66,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listarTodosUsuarios() {
         try {
             List<UsuarioResponse> usuarios = usuarioService.listarTodos();
@@ -83,7 +83,7 @@ public class UsuarioController {
             ResponseEntity.notFound().build();
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarUsuario(@PathVariable Long id) {
         try {
