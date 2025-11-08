@@ -1,24 +1,21 @@
 package com.locadora.presentation;
 
 import com.locadora.domain.entity.Locacao;
-import com.locadora.domain.entity.Usuario;
-import com.locadora.domain.entity.Veiculo;
-import com.locadora.domain.enums.StatusVeiculo;
 import com.locadora.domain.repository.LocacaoRepository;
-
-
 import com.locadora.domain.repository.UsuarioRepository;
 import com.locadora.domain.repository.VeiculoRepository;
 import com.locadora.application.service.LocacaoService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
 
-@RestController
-@RequestMapping("/api/locacoes")
+/**
+ * Endpoints for /api/locacoes have been disabled by removing controller mappings.
+ * To re-enable, restore @RestController and @RequestMapping("/api/locacoes") and mapping annotations.
+ */
+@Component
 public class LocacaoController {
     private final LocacaoRepository locacaoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -35,8 +32,6 @@ public class LocacaoController {
         this.locacaoService = locacaoService;
     }
 
-    @GetMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
     public List<Locacao> listar() {
         try {
             return locacaoService.listarTodas();
@@ -46,9 +41,7 @@ public class LocacaoController {
         }
     }
 
-    @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> criar(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> criar(Map<String, String> body) {
         try {
             Long usuarioId = Long.valueOf(body.get("usuarioId"));
             Long veiculoId = Long.valueOf(body.get("veiculoId"));

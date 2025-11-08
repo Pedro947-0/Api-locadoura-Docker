@@ -100,11 +100,11 @@ public class UsuarioService {
                     return false;
                 }
 
-                // se o cliente informou uma empresa no payload de login, verificar se o usuário pertence a ela
+
                 if (request.getDefaultEmpresaId() != null) {
                     if (usuario.getDefaultEmpresa() == null) {
                         logger.warn("Usuário não possui empresa padrão, mas login solicitou empresa id={}", request.getDefaultEmpresaId());
-                        return false; // negar login se empresa for exigida
+                        return false;
                     }
                     if (!request.getDefaultEmpresaId().equals(usuario.getDefaultEmpresa().getId())) {
                         logger.warn("Empresa do usuário ({}) não confere com valor enviado no login ({})", usuario.getDefaultEmpresa().getId(), request.getDefaultEmpresaId());

@@ -31,5 +31,16 @@ public class EmpresaService {
         e.setNome(input.getNome());
         return repo.save(e);
     }
-}
 
+    public boolean excluir(Long id) {
+        var empresaOpt = repo.findById(id);
+        if (empresaOpt.isEmpty()) return false;
+        Empresa empresa = empresaOpt.get();
+
+        if (empresa.getUsuarios() != null && !empresa.getUsuarios().isEmpty()) {
+            return false;
+        }
+        repo.deleteById(id);
+        return true;
+    }
+}

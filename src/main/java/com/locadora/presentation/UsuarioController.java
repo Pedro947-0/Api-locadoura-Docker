@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 import java.util.List;
+import io.swagger.v3.oas.annotations.Hidden;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Hidden
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {

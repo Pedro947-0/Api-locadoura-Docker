@@ -27,12 +27,25 @@ public class VeiculoController {
 
     @GetMapping
     @Operation(summary = "Listar todos os veículos")
-    // Removido @PreAuthorize para acesso público
+
     public List<VeiculoResponse> listar() {
         try {
             return veiculoService.listarTodos();
         } catch (Exception e) {
             logger.error("Erro ao listar veículos", e);
+            return List.of();
+        }
+    }
+
+
+    @GetMapping("/alugados")
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
+    @Operation(summary = "Listar veículos alugados")
+    public List<VeiculoResponse> listarAlugados() {
+        try {
+            return veiculoService.listarAlugados();
+        } catch (Exception e) {
+            logger.error("Erro ao listar veículos alugados", e);
             return List.of();
         }
     }

@@ -63,7 +63,7 @@ public class Usuario {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; } // codificar a senha no serviço antes de persistir
+    public void setSenha(String senha) { this.senha = senha; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -127,4 +127,12 @@ public class VeiculoService {
                 veiculo.getStatus()
         );
     }
+
+    // New method: listar veículos com status ALUGADO
+    public List<VeiculoResponse> listarAlugados() {
+        return veiculoRepository.findByStatus(StatusVeiculo.ALUGADO)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
 }
