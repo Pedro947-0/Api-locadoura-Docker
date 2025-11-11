@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 
-/**
- * Endpoints for /api/locacoes have been disabled by removing controller mappings.
- * To re-enable, restore @RestController and @RequestMapping("/api/locacoes") and mapping annotations.
- */
+
 @Component
 public class LocacaoController {
     private final LocacaoRepository locacaoRepository;

@@ -2,7 +2,7 @@ package com.locadora.presentation;
 
 import com.locadora.domain.entity.Empresa;
 import com.locadora.domain.repository.EmpresaRepository;
-import com.locadora.service.EmpresaService;
+import com.locadora.application.service.EmpresaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;

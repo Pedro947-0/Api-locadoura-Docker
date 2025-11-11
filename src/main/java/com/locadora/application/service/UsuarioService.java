@@ -128,7 +128,7 @@ public class UsuarioService {
         return new UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getCpf(), empresaId);
     }
 
-    // Novo método para listar todos os usuários (para exibir no Swagger)
+
     public List<UsuarioResponse> listarTodos() {
         try {
             List<Usuario> usuarios = usuarioRepository.findAll();
@@ -139,6 +139,17 @@ public class UsuarioService {
         } catch (Exception e) {
             logger.error("Erro ao listar usuários: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao listar usuários");
+        }
+    }
+
+
+    public Optional<UsuarioResponse> buscarPorId(Long id) {
+        try {
+            return usuarioRepository.findByIdAndStatusNot(id, com.locadora.domain.enums.StatusUsuario.EXCLUIDO)
+                    .map(this::toResponse);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar usuário por id: {}", e.getMessage(), e);
+            return Optional.empty();
         }
     }
 

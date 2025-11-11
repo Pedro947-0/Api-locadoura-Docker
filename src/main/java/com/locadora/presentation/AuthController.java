@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.List;
 
 // autenticação e registro de usuário
 
@@ -48,6 +49,31 @@ public class AuthController {
                     .orElse(ResponseEntity.status(401).build());
         } catch (Exception e) {
             System.err.println("Erro ao realizar login: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
+        try {
+            List<UsuarioResponse> usuarios = usuarioService.listarTodos();
+            return ResponseEntity.ok(usuarios);
+        } catch (Exception e) {
+            System.err.println("Erro ao listar usuários: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UsuarioResponse> buscarUsuarioPorId(@PathVariable Long id) {
+        try {
+            return usuarioService.buscarPorId(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar usuário por id: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

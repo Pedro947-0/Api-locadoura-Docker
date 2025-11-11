@@ -1,4 +1,3 @@
-
 package com.locadora.infra.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,8 @@ import org.springframework.http.HttpMethod;
 public class SecurityConfig {
 
 
-    private static final boolean DISABLE_SECURITY = false;
-    // private static final boolean DISABLE_SECURITY = true;
+    //private static final boolean DISABLE_SECURITY = false;
+    private static final boolean DISABLE_SECURITY = true;
 
     @Autowired
 
@@ -33,6 +32,7 @@ public class SecurityConfig {
             http.csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .anonymous(anonymous -> anonymous.principal("dev").authorities("USER", "ADMIN"))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         } else {

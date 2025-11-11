@@ -1,4 +1,4 @@
-package com.locadora.service;
+package com.locadora.application.service;
 
 import com.locadora.domain.entity.Empresa;
 import com.locadora.domain.repository.EmpresaRepository;
