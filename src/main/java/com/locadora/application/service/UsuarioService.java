@@ -58,6 +58,11 @@ public class UsuarioService {
                 empresaRepository.findById(request.getDefaultEmpresaId()).ifPresent(usuario::setDefaultEmpresa);
             }
 
+            // garantir status padrão ATIVO caso venha nulo
+            if (usuario.getStatus() == null) {
+                usuario.setStatus(com.locadora.domain.enums.StatusUsuario.ATIVO);
+            }
+
             Usuario salvo = usuarioRepository.save(usuario);
             logger.info("Usuário registrado com sucesso: {}", salvo.getEmail());
             Long empresaId = salvo.getDefaultEmpresa() != null ? salvo.getDefaultEmpresa().getId() : null;
@@ -73,7 +78,7 @@ public class UsuarioService {
 
     public Optional<Usuario> buscarPorEmail(String email) {
         try {
-            return usuarioRepository.findByEmail(email);
+            return usuarioRepository.findByEmailAndStatusNot(email, com.locadora.domain.enums.StatusUsuario.EXCLUIDO);
         } catch (Exception e) {
             logger.error("Erro ao buscar usuário por email: {}", e.getMessage(), e);
             return Optional.empty();
@@ -82,7 +87,7 @@ public class UsuarioService {
 
     public Optional<Usuario> buscarPorEmailECpf(String email, String cpf) {
         try {
-            return usuarioRepository.findByEmailAndCpf(email, cpf);
+            return usuarioRepository.findByEmailAndCpfAndStatusNot(email, cpf, com.locadora.domain.enums.StatusUsuario.EXCLUIDO);
         } catch (Exception e) {
             logger.error("Erro ao buscar usuário por email e CPF: {}", e.getMessage(), e);
             return Optional.empty();
@@ -91,9 +96,14 @@ public class UsuarioService {
 
     public boolean validarCredenciais(UsuarioLoginRequest request) {
         try {
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailAndCpf(request.getEmail(), request.getCpf());
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailAndCpfAndStatusNot(request.getEmail(), request.getCpf(), com.locadora.domain.enums.StatusUsuario.EXCLUIDO);
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
+                // se o usuário estiver bloqueado, negar login
+                if (usuario.getStatus() == com.locadora.domain.enums.StatusUsuario.BLOQUEADO) {
+                    logger.warn("Tentativa de login de usuário bloqueado: {}", request.getEmail());
+                    return false;
+                }
                 boolean senhaValida = passwordEncoder.matches(request.getSenha(), usuario.getSenha());
                 if (!senhaValida) {
                     logger.warn("Senha inválida para o email: {}", request.getEmail());
@@ -131,7 +141,7 @@ public class UsuarioService {
 
     public List<UsuarioResponse> listarTodos() {
         try {
-            List<Usuario> usuarios = usuarioRepository.findAll();
+            List<Usuario> usuarios = usuarioRepository.findAllByStatusNot(com.locadora.domain.enums.StatusUsuario.EXCLUIDO);
             logger.info("Listando todos os usuários. Total: {}", usuarios.size());
             return usuarios.stream()
                     .map(this::toResponse)
@@ -209,6 +219,17 @@ public class UsuarioService {
                 return false;
             }
             usuarioBanco.atualizarUsuarioFromDTO(usuarioRequest);
+            // Se veio senha no DTO, encode antes de salvar
+            if (usuarioRequest.getSenha() != null) {
+                usuarioBanco.setSenha(passwordEncoder.encode(usuarioRequest.getSenha()));
+            }
+
+
+            // Se veio defaultEmpresaId, buscar e associar
+            if (usuarioRequest.getDefaultEmpresaId() != null) {
+                empresaRepository.findById(usuarioRequest.getDefaultEmpresaId())
+                        .ifPresent(usuarioBanco::setDefaultEmpresa);
+            }
             usuarioRepository.save(usuarioBanco);
             return true;
         } catch (Exception e) {

@@ -6,6 +6,8 @@ public class UsuarioCriarRequestDto {
     private String cpf;
     private String senha;
     private String role;
+    // novo campo para permitir atualizar/definir a empresa padrão pelo id
+    private Long defaultEmpresaId;
 
     public UsuarioCriarRequestDto() {}
 
@@ -23,5 +25,7 @@ public class UsuarioCriarRequestDto {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-}
 
+    public Long getDefaultEmpresaId() { return defaultEmpresaId; }
+    public void setDefaultEmpresaId(Long defaultEmpresaId) { this.defaultEmpresaId = defaultEmpresaId; }
+}

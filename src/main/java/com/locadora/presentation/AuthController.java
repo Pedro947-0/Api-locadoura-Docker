@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 // autenticação e registro de usuário
 
@@ -74,6 +75,32 @@ public class AuthController {
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
             System.err.println("Erro ao buscar usuário por id: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
+        try {
+            return usuarioService.excluirUsuario(id) ?
+                    ResponseEntity.noContent().build() :
+                    ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            System.err.println("Erro ao excluir usuário: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Atualizar usuário (reaproveita o DTO/serviço existente)
+    @PutMapping("/users/{id}")
+    public ResponseEntity<?> atualizarUsuario(@PathVariable Long id, @RequestBody com.locadora.application.dto.request.UsuarioCriarRequestDto usuario) {
+        try {
+            return usuarioService.atualizarUsuario(id, usuario) ?
+                    ResponseEntity.noContent().build() :
+                    ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar usuário: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

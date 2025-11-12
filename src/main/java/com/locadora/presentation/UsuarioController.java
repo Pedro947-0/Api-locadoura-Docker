@@ -32,12 +32,13 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Usuario> listar() {
+    public ResponseEntity<List<UsuarioResponse>> listar() {
         try {
-            return usuarioRepository.findAll();
+            List<UsuarioResponse> usuarios = usuarioService.listarTodos();
+            return ResponseEntity.ok(usuarios);
         } catch (Exception e) {
             logger.error("Erro ao listar usuários", e);
-            throw new RuntimeException("Erro ao listar usuários");
+            return ResponseEntity.internalServerError().build();
         }
     }
 
