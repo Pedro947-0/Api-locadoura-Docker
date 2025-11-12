@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Operation;
 
-// autenticação e registro de usuário
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +24,7 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    @Operation(summary = "Adcionar novo usuário")
     @PostMapping("/register")
     public ResponseEntity<UsuarioResponse> register(@Valid @RequestBody UsuarioRequest request) {
         try {
@@ -34,6 +36,7 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "login de usuário")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody UsuarioLoginRequest request) {
         try {
@@ -55,6 +58,7 @@ public class AuthController {
     }
 
 
+    @Operation(summary = " listar todos os usuários")
     @GetMapping("/users")
     public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
         try {
@@ -67,6 +71,7 @@ public class AuthController {
     }
 
 
+    @Operation(summary = "buscar usuário por id")
     @GetMapping("/users/{id}")
     public ResponseEntity<UsuarioResponse> buscarUsuarioPorId(@PathVariable Long id) {
         try {
@@ -79,6 +84,7 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "excluir usuario")
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
@@ -92,7 +98,7 @@ public class AuthController {
         }
     }
 
-    // Atualizar usuário (reaproveita o DTO/serviço existente)
+    @Operation(summary = "atualizar usuário")
     @PutMapping("/users/{id}")
     public ResponseEntity<?> atualizarUsuario(@PathVariable Long id, @RequestBody com.locadora.application.dto.request.UsuarioCriarRequestDto usuario) {
         try {

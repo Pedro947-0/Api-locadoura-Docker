@@ -53,12 +53,12 @@ public class UsuarioService {
             usuario.setCpf(request.getCpf());
             usuario.setRole(role);
 
-            // associar empresa padrão se informado
+
             if (request.getDefaultEmpresaId() != null) {
                 empresaRepository.findById(request.getDefaultEmpresaId()).ifPresent(usuario::setDefaultEmpresa);
             }
 
-            // garantir status padrão ATIVO caso venha nulo
+
             if (usuario.getStatus() == null) {
                 usuario.setStatus(com.locadora.domain.enums.StatusUsuario.ATIVO);
             }
@@ -99,7 +99,7 @@ public class UsuarioService {
             Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailAndCpfAndStatusNot(request.getEmail(), request.getCpf(), com.locadora.domain.enums.StatusUsuario.EXCLUIDO);
             if (usuarioOpt.isPresent()) {
                 Usuario usuario = usuarioOpt.get();
-                // se o usuário estiver bloqueado, negar login
+
                 if (usuario.getStatus() == com.locadora.domain.enums.StatusUsuario.BLOQUEADO) {
                     logger.warn("Tentativa de login de usuário bloqueado: {}", request.getEmail());
                     return false;
@@ -219,13 +219,13 @@ public class UsuarioService {
                 return false;
             }
             usuarioBanco.atualizarUsuarioFromDTO(usuarioRequest);
-            // Se veio senha no DTO, encode antes de salvar
+
             if (usuarioRequest.getSenha() != null) {
                 usuarioBanco.setSenha(passwordEncoder.encode(usuarioRequest.getSenha()));
             }
 
 
-            // Se veio defaultEmpresaId, buscar e associar
+
             if (usuarioRequest.getDefaultEmpresaId() != null) {
                 empresaRepository.findById(usuarioRequest.getDefaultEmpresaId())
                         .ifPresent(usuarioBanco::setDefaultEmpresa);

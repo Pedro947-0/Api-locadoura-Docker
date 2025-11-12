@@ -6,7 +6,7 @@ public class UsuarioCriarRequestDto {
     private String cpf;
     private String senha;
     private String role;
-    // novo campo para permitir atualizar/definir a empresa padrão pelo id
+
     private Long defaultEmpresaId;
 
     public UsuarioCriarRequestDto() {}

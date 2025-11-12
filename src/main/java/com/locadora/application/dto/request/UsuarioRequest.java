@@ -26,7 +26,7 @@ public class UsuarioRequest {
 
     private String role = "USER";
 
-    // novo campo opcional para associar uma empresa por id durante o registro
+
     private Long defaultEmpresaId;
 
     public UsuarioRequest() {}
