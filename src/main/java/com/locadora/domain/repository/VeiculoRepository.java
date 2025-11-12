@@ -8,6 +8,6 @@ import com.locadora.domain.enums.StatusVeiculo;
 public interface VeiculoRepository extends JpaRepository<Veiculo, Long> {
     boolean existsByPlaca(String placa);
 
-    // Derived query to find vehicles by status
+
     List<Veiculo> findByStatus(StatusVeiculo status);
 }
