@@ -3,12 +3,15 @@ package com.locadora.presentation;
 import com.locadora.application.dto.request.VeiculoRequest;
 import com.locadora.application.dto.response.VeiculoResponse;
 import com.locadora.application.service.VeiculoService;
+import com.locadora.application.dto.request.LocacaoRequest;
+import com.locadora.application.service.LocacaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.time.LocalDate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +25,15 @@ public class VeiculoController {
     @Autowired
     private VeiculoService veiculoService;
 
+    @Autowired
+    private LocacaoService locacaoService;
+
     private static final Logger logger = LoggerFactory.getLogger(VeiculoController.class);
 
 
     @GetMapping
     @Operation(summary = "Listar todos os veículos")
-
+    @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
     public List<VeiculoResponse> listar() {
         try {
             return veiculoService.listarTodos();
@@ -118,6 +124,7 @@ public class VeiculoController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Atualizar veículo", description = "Método responsável por atualizar veículo")
     public ResponseEntity<?> atualizarVeiculo(@PathVariable Long id, @RequestBody VeiculoRequest veiculo) {
         return veiculoService.atualizarVeiculo(id, veiculo) ?
@@ -127,6 +134,7 @@ public class VeiculoController {
 
 
     @PatchMapping("/{id}/bloquear")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Bloquear veículo", description = "Método responsável por bloquear veículo")
     public ResponseEntity<?> bloquearVeiculo(@PathVariable Long id) {
         return veiculoService.bloquearVeiculo(id) ?
@@ -136,10 +144,29 @@ public class VeiculoController {
 
 
     @PatchMapping("/{id}/desbloquear")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Desbloquear veículo", description = "Método responsável por desbloquear veículo")
     public ResponseEntity<?> desbloquearVeiculo(@PathVariable Long id) {
         return veiculoService.desbloquearVeiculo(id) ?
             ResponseEntity.noContent().build() :
             ResponseEntity.notFound().build();
+    }
+
+
+    @PostMapping("/locacoes")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Operation(summary = "Adicionar nova locação")
+    public ResponseEntity<?> criarLocacao(@RequestBody LocacaoRequest body) {
+        try {
+            Long usuarioId = body.getUsuarioId();
+            Long veiculoId = body.getVeiculoId();
+            LocalDate inicio = body.getDataInicio();
+            LocalDate fim = body.getDataFim();
+            boolean sucesso = locacaoService.criarLocacao(usuarioId, veiculoId, inicio, fim);
+            return sucesso ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().body("Usuário, veículo inválido ou veículo indisponível");
+        } catch (Exception e) {
+            logger.error("Erro ao criar locação: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Erro ao criar locação");
+        }
     }
 }
