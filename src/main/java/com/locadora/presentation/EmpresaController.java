@@ -23,6 +23,7 @@ public class EmpresaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Criar nova empresa")
     public ResponseEntity<Empresa> criar(@RequestBody Empresa empresa) {
         Empresa saved = empresaRepository.save(empresa);
@@ -30,6 +31,7 @@ public class EmpresaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Listar todas as empresas")
     public ResponseEntity<List<Empresa>> listar() {
         List<Empresa> todas = empresaRepository.findAll();
@@ -37,6 +39,7 @@ public class EmpresaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Buscar empresa por ID")
     public ResponseEntity<Empresa> buscarPorId(@PathVariable Long id) {
         return empresaService.buscarPorId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -49,7 +52,6 @@ public class EmpresaController {
         try {
             boolean sucesso = empresaService.excluir(id);
             if (!sucesso) {
-                // either not found or has associated users
                 var empresaOpt = empresaService.buscarPorId(id);
                 if (empresaOpt.isEmpty()) return ResponseEntity.notFound().build();
                 return ResponseEntity.badRequest().body("Empresa possui usuários associados e não pode ser excluída");

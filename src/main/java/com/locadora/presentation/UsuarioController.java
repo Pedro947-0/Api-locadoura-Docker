@@ -80,6 +80,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> atualizarUsuario(@PathVariable Long id, @RequestBody com.locadora.application.dto.request.UsuarioCriarRequestDto usuario) {
         return usuarioService.atualizarUsuario(id, usuario) ?
             ResponseEntity.noContent().build() :
@@ -100,6 +101,7 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/bloquear")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> atualizarBloquear(@PathVariable Long id) {
         return usuarioService.bloquearUsuario(id) ?
             ResponseEntity.noContent().build() :
@@ -107,6 +109,7 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/desbloquear")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> atualizarDesbloquear(@PathVariable Long id) {
         return usuarioService.desbloquearUsuario(id) ?
             ResponseEntity.noContent().build() :

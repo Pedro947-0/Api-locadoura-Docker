@@ -59,6 +59,7 @@ public class AuthController {
 
 
     @Operation(summary = " listar todos os usuários")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/users")
     public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
         try {
@@ -72,6 +73,7 @@ public class AuthController {
 
 
     @Operation(summary = "buscar usuário por id")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/users/{id}")
     public ResponseEntity<UsuarioResponse> buscarUsuarioPorId(@PathVariable Long id) {
         try {
@@ -99,6 +101,7 @@ public class AuthController {
     }
 
     @Operation(summary = "atualizar usuário")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/users/{id}")
     public ResponseEntity<?> atualizarUsuario(@PathVariable Long id, @RequestBody com.locadora.application.dto.request.UsuarioCriarRequestDto usuario) {
         try {

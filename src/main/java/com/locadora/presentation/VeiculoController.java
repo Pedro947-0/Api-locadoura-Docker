@@ -115,6 +115,7 @@ public class VeiculoController {
 
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Excluir veículo", description = "Método responsável por excluir veículo")
     public ResponseEntity<?> excluirVeiculo(@PathVariable Long id) {
         return veiculoService.excluirVeiculo(id) ?
