@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-// listar, buscar, criar, alugar, devolver e remover veículos.
+
 
 @RestController
 @RequestMapping("/api/veiculos")
